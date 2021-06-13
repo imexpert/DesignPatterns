@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Strategy.Models
@@ -14,5 +10,7 @@ namespace WebApp.Strategy.Models
         {
                 
         }
+
+        public DbSet<Product> Products { get; set; }
     }
 }

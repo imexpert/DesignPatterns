@@ -1,15 +1,15 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WebApp.Strategy.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using WebApp.Strategy.Repositories;
 
 namespace WebApp.Strategy
 {
@@ -25,6 +25,27 @@ namespace WebApp.Strategy
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
+            services.AddScoped<IProductRepository>(sp =>
+            {
+                var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+                var context = sp.GetRequiredService<AppIdentityDbContext>();
+
+                if (httpContextAccessor.HttpContext == null) return new ProductRepositorySqlServer(context);
+
+                var claim = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type == Settings.ClaimDatabaseType);
+
+                if (claim == null) return new ProductRepositorySqlServer(context);
+
+                var databaseType = (DatabaseTypes)int.Parse(claim.Value);
+
+                return databaseType switch
+                {
+                    DatabaseTypes.SqlServer => new ProductRepositorySqlServer(context),
+                    DatabaseTypes.MongoDb => new ProductRepositoryMongoDb(Configuration),
+                    _ => throw new NotImplementedException()
+                };
+            });
             services.AddDbContext<AppIdentityDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
