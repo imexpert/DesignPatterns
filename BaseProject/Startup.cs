@@ -7,6 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BaseProject.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseProject
 {
@@ -22,6 +25,16 @@ namespace BaseProject
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<AppIdentityDbContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
+            });
+
+            services.AddIdentity<AppUser, IdentityRole>(s =>
+            {
+                s.User.RequireUniqueEmail = true;
+            }).AddEntityFrameworkStores<AppIdentityDbContext>();
+
             services.AddControllersWithViews();
         }
 
@@ -39,6 +52,8 @@ namespace BaseProject
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
